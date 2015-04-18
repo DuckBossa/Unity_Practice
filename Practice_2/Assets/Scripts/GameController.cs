@@ -30,6 +30,7 @@ public class GameController : MonoBehaviour {
 	private int numBOD;
 	private PlayerController player;
 	private float nextBOD;
+	private float time;
 	void Start () {
 		numBOD = 0;
 		player = GameObject.Find("Player").GetComponent<PlayerController>();
@@ -42,14 +43,20 @@ public class GameController : MonoBehaviour {
 		UpdateScore ();
 		StartCoroutine (SpawnWaves ());
 		nextBOD = BOD_Spawn;
+		time = 0; 
 	}
 
 	void Update(){
 		if (restart) {
 			if(Input.GetKeyDown(KeyCode.R)){
 				Application.LoadLevel(Application.loadedLevel);
+				nextBOD = BOD_Spawn;
 			}
 		}
+	}
+
+	void FixedUpdate(){
+		time += Time.deltaTime;
 	}
 
 	public void AddScore(int val){
@@ -93,6 +100,29 @@ public class GameController : MonoBehaviour {
 	IEnumerator SpawnWaves(){
 		yield return new WaitForSeconds (spawnWait);
 		while (true) {
+			if(nextBOD < time && maxBOD > numBOD){
+				nextBOD = time + BOD_Spawn;
+				Vector3 spawnPosition;
+				switch (numBOD){
+				case 0:
+					spawnPosition = new Vector3(0,spawnValues.y,BOD_Z);
+					break;
+				case 1:
+					spawnPosition = new Vector3(spawnValues.x/2,spawnValues.y,BOD_Z - 5);
+					break;
+				case 2:
+					spawnPosition = new Vector3(-spawnValues.x/2,spawnValues.y,BOD_Z - 5);
+					break;
+				default:
+					Debug.Log ("Wrong Calculation for number of BODS");
+					spawnPosition = new Vector3(0,spawnValues.y,BOD_Z);
+					break;
+				}
+				Instantiate(ball_of_doom,spawnPosition,Quaternion.identity);
+				numBOD++;
+				yield return new WaitForSeconds(spawnRate);
+			}
+
 			for(int i =	 0; i < numSpawnHazard; i++){
 				Vector3 spawnPosition = new Vector3 (Random.Range(-spawnValues.x,spawnValues.x),spawnValues.y,spawnValues.z);
 				Quaternion spawnRotation = Quaternion.identity;
@@ -107,41 +137,16 @@ public class GameController : MonoBehaviour {
 			}
 			for(int i = 0; i < numSpawnEnemy; i++){
 				Vector3 spawnPosition = new Vector3 (Random.Range(-spawnValues.x,spawnValues.x),spawnValues.y,spawnValues.z);
-				Debug.Log(spawnPosition);
 				Instantiate (enemy, spawnPosition, transform.rotation);
 				yield return new WaitForSeconds(spawnRate);
 			}
 
 			for(int i = 0; i < numSpawnEnemy2; i++){
 				Vector3 spawnPosition = new Vector3 (Random.Range(-spawnValues.x,spawnValues.x),spawnValues.y,spawnValues.z);
-				Debug.Log(spawnPosition);
 				Instantiate (enemy2, spawnPosition, transform.rotation);
 				yield return new WaitForSeconds(spawnRate);
 			}
-			
-			if(nextBOD < Time.time && maxBOD > numBOD){
-				nextBOD += Time.time + BOD_Spawn;
 
-				Vector3 spawnPosition;
-				switch (numBOD){
-					case 0:
-						spawnPosition = new Vector3(0,spawnValues.y,BOD_Z);
-						break;
-					case 1:
-						spawnPosition = new Vector3(spawnValues.x/2,spawnValues.y,BOD_Z - 5);
-						break;
-					case 2:
-						spawnPosition = new Vector3(-spawnValues.x/2,spawnValues.y,BOD_Z - 5);
-						break;
-					default:
-						Debug.Log ("Wrong Calculation for number of BODS");
-						spawnPosition = new Vector3(0,spawnValues.y,BOD_Z);
-						break;
-				}
-				Instantiate(ball_of_doom,spawnPosition,Quaternion.identity);
-				numBOD++;
-				yield return new WaitForSeconds(spawnRate);
-			}
 
 			yield return new WaitForSeconds(spawnWait);
 
